@@ -19,14 +19,14 @@
  ***************************************************************************/
  ]]
 
-local PAL = {
+PAL = {
 	m_bank = 0
 }
 
-function PAL.read8(address)
+function PIOCart.PAL.read8(address)
 	local page = bit.rshift(address,16)
 	local switch_bit = 0
-	if switch_on then switch_bit = 1 end
+	if PIOCart.m_switchOn then switch_bit = 1 end
 	
 	if(page == 0x1f06) then
 		addr_mask = bit.band(address, 7)
@@ -45,13 +45,13 @@ function PAL.read8(address)
 	return 0xff
 end
 
-function PAL.reset()
-	print('PAL.reset')
+function PIOCart.PAL.reset()
+	print('PIOCart.PAL.reset')
 	FlashMemory.reset()
-	PAL.m_bank = 0
+	PIOCart.PAL.m_bank = 0
 end
 
-function PAL.setLUTFlashBank(bank)
+function PIOCart.PAL.setLUTFlashBank(bank)
 	local readLUT = PCSX.getReadLUT()
 	local writeLUT = PCSX.getWriteLUT()
 	local exp1 = PCSX.getParPtr()
@@ -71,14 +71,14 @@ function PAL.setLUTFlashBank(bank)
 	readLUT[0x9f05] = readLUT[0x1f05]
 	readLUT[0xbf05] = readLUT[0x1f05]
 	
-	PAL.m_bank = bank
+	PIOCart.PAL.m_bank = bank
 end
 
-function PAL.write8(address, value)
+function PIOCart.PAL.write8(address, value)
 	if address >= 0x1f000000 and address <= 0x1f03ffff then
 		FlashMemory.write8(bit.band(address, 0x3ffff), value)
 	elseif address >= 0x1f040000 and address <= 0x1f060000 - 1 then
-		if (PAL.m_bank == 0) then
+		if (PIOCart.PAL.m_bank == 0) then
 			FlashMemory.write8(bit.band(address, 0x3ffff), value)
 		end
 	end

@@ -19,79 +19,81 @@
  ***************************************************************************/
  ]]
 
-local FlashMemory = {
+PIOCart.PAL.FlashMemory = {
     m_dataProtectEnabled = true,
     m_pageWriteEnabled = false,
     m_targetWritePage = -1
 }
 
-function FlashMemory.reset()
-    FlashMemory.resetCommandBuffer()
-    FlashMemory.m_dataProtectEnabled = true
-    FlashMemory.m_pageWriteEnabled = false
+function PIOCart.PAL.FlashMemory.reset()
+    PIOCart.PAL.FlashMemory.resetCommandBuffer()
+    PIOCart.PAL.FlashMemory.m_dataProtectEnabled = true
+    PIOCart.PAL.FlashMemory.m_pageWriteEnabled = false
 end
 
-function FlashMemory.writeCommandBus(address, value)
+function PIOCart.PAL.FlashMemory.writeCommandBus(address, value)
     print('write command bus: ' .. address .. ' ' .. value)
 end
 
-function FlashMemory.write8(address, value)
+function PIOCart.PAL.FlashMemory.write8(address, value)
     local offset = bit.band(address, 0x3ffff)
 
-    if (FlashMemory.m_pageWriteEnabled == true) then
-        if (FlashMemory.m_targetWritePage == -1) then
-            FlashMemory.m_targetWritePage = address / 128
+    if (PIOCart.PAL.FlashMemory.m_pageWriteEnabled == true) then
+        if (PIOCart.PAL.FlashMemory.m_targetWritePage == -1) then
+            PIOCart.PAL.FlashMemory.m_targetWritePage = address / 128
         end
     end
 
-    if ((address / 128) == FlashMemory.m_targetWritePage) then
+    if ((address / 128) == PIOCart.PAL.FlashMemory.m_targetWritePage) then
         PCSX.getParPtr()[address] = value
 
         if (math.fmod(bit.band(address, 0xff), 0x80) == 0x7f) then
-            FlashMemory.m_pageWriteEnabled = false
-            FlashMemory.m_targetWritePage = -1
+            PIOCart.PAL.FlashMemory.m_pageWriteEnabled = false
+            PIOCart.PAL.FlashMemory.m_targetWritePage = -1
         end
-    elseif (FlashMemory.m_dataProtectEnabled == false) then
+    elseif (PIOCart.PAL.FlashMemory.m_dataProtectEnabled == false) then
         PCSX.getParPtr()[address] = value
     else
         if ((address == 0x2aaa) or (address == 0x5555)) then
-            FlashMemory.writeCommandBus(address, value)
+            PIOCart.PAL.FlashMemory.writeCommandBus(address, value)
         end
     end
 end
 
-function FlashMemory.softwareDataProtectEnablePageWrite()
+function PIOCart.PAL.FlashMemory.softwareDataProtectEnablePageWrite()
 
 end
 
-function FlashMemory.softwareDataProtectDisable()
+function PIOCart.PAL.FlashMemory.softwareDataProtectDisable()
 
 end
 
-function FlashMemory.enterSoftwareIDMode()
+function PIOCart.PAL.FlashMemory.enterSoftwareIDMode()
 
 end
 
-function FlashMemory.exitSoftwareIDMode()
+function PIOCart.PAL.FlashMemory.exitSoftwareIDMode()
 
 end
 
-function FlashMemory.checkCommand()
+function PIOCart.PAL.FlashMemory.checkCommand()
 
 end
 
-function FlashMemory.resetCommandBuffer()
+function PIOCart.PAL.FlashMemory.resetCommandBuffer()
 
 end
 
-function FlashMemory.resetFlash()
+function PIOCart.PAL.FlashMemory.resetFlash()
 
 end
 
-function FlashMemory.setLUTNormal()
+function PIOCart.PAL.FlashMemory.setLUTNormal()
     
 end
 
-function FlashMemory.setLUTSoftwareID()
+function PIOCart.PAL.FlashMemory.setLUTSoftwareID()
 
 end
+
+PIOCart.PAL.FlashMemory.reset()
