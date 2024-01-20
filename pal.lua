@@ -19,7 +19,7 @@
  ***************************************************************************/
  ]]
 
-PAL = {
+PIOCart.PAL = {
 	m_bank = 0
 }
 
@@ -47,7 +47,7 @@ end
 
 function PIOCart.PAL.reset()
 	print('PIOCart.PAL.reset')
-	FlashMemory.reset()
+	PIOCart.PAL.FlashMemory.reset()
 	PIOCart.PAL.m_bank = 0
 end
 

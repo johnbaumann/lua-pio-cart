@@ -85,4 +85,5 @@ function UnknownMemoryWrite(address, size)
 	end
 end
 
+PIOCart.PAL.FlashMemory.init()
 PIOCart.LoadCart(PIOCart.cart_path)

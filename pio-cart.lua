@@ -22,7 +22,6 @@
  PIOCart = {
     m_Connected = true,
     m_switchOn = true,
-    PAL = {FlashMemory = {}}
 }
 
 function PIOCart.LoadCart(filename)

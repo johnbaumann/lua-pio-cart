@@ -19,11 +19,21 @@
  ***************************************************************************/
  ]]
 
+local ffi = require("ffi")
+
 PIOCart.PAL.FlashMemory = {
     m_dataProtectEnabled = true,
     m_pageWriteEnabled = false,
-    m_targetWritePage = -1
+    m_targetWritePage = -1,
+    m_softwareID = ffi.new("uint8_t[64 * 1024]"),
 }
+
+function PIOCart.PAL.FlashMemory.init()
+    for i=0,(64*1024)-1,2 do
+        PIOCart.PAL.FlashMemory.m_softwareID[i] = 0xbf
+        PIOCart.PAL.FlashMemory.m_softwareID[i+1] = 0x10
+    end
+end
 
 function PIOCart.PAL.FlashMemory.reset()
     PIOCart.PAL.FlashMemory.resetCommandBuffer()
@@ -61,11 +71,16 @@ function PIOCart.PAL.FlashMemory.write8(address, value)
 end
 
 function PIOCart.PAL.FlashMemory.softwareDataProtectEnablePageWrite()
-
+    PIOCart.PAL.FlashMemory.m_dataProtectEnabled = true
+    PIOCart.PAL.FlashMemory.m_pageWriteEnabled = true
 end
 
 function PIOCart.PAL.FlashMemory.softwareDataProtectDisable()
+    PIOCart.PAL.FlashMemory.m_dataProtectEnabled = false
+end
 
+function PIOCart.PAL.FlashMemory.softwareChipErase()
+    
 end
 
 function PIOCart.PAL.FlashMemory.enterSoftwareIDMode()
