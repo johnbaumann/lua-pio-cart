@@ -20,12 +20,10 @@
  ]]
 
 local PAL = {
-	
+	m_bank = 0
 }
 
-local pal_bank
-
-function pal_read8(address)
+function PAL.read8(address)
 	local page = bit.rshift(address,16)
 	local switch_bit = 0
 	if switch_on then switch_bit = 1 end
@@ -47,13 +45,13 @@ function pal_read8(address)
 	return 0xff
 end
 
-function pal_reset()
-	print('pal_reset')
+function PAL.reset()
+	print('PAL.reset')
 	FlashMemory.reset()
-	pal_bank = 0
+	PAL.m_bank = 0
 end
 
-function pal_setLUTFlashBank(bank)
+function PAL.setLUTFlashBank(bank)
 	local readLUT = PCSX.getReadLUT()
 	local writeLUT = PCSX.getWriteLUT()
 	local exp1 = PCSX.getParPtr()
@@ -73,14 +71,14 @@ function pal_setLUTFlashBank(bank)
 	readLUT[0x9f05] = readLUT[0x1f05]
 	readLUT[0xbf05] = readLUT[0x1f05]
 	
-	pal_bank = bank
+	PAL.m_bank = bank
 end
 
-function pal_write8(address, value)
+function PAL.write8(address, value)
 	if address >= 0x1f000000 and address <= 0x1f03ffff then
 		FlashMemory.write8(bit.band(address, 0x3ffff), value)
 	elseif address >= 0x1f040000 and address <= 0x1f060000 - 1 then
-		if (pal_bank == 0) then
+		if (PAL.m_bank == 0) then
 			FlashMemory.write8(bit.band(address, 0x3ffff), value)
 		end
 	end

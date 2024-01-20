@@ -30,7 +30,7 @@ local base_addr = 0x1f000000
 local cart_attached = true
 local switch_on = true
 local cart_buff
-local cart_path = 'E:\\ps1\\cart\\unirom_standalone.rom'
+local cart_path = 'unirom_standalone.rom'
 -- Cart
 
 function LoadCart(filename)
@@ -39,19 +39,18 @@ function LoadCart(filename)
 	if(string.len(filename) == 0) then
 		print('cart filename cannot be blank')
 	else
-		local CartBinary = assert(Support.File.open(filename, "READ"))
+		local CartBinary = Support.extra.open('unirom_standalone.rom')
 		print('Opened file: ' .. filename .. ' file size: ' .. CartBinary:size())
 
 		cart_buff = Support.NewLuaBuffer(CartBinary:size())
 		cart_buff = CartBinary:read(CartBinary:size())
-		CartBinary:close()		
 
 		for i=0,CartBinary:size()-1,1 do
 			exp1[i] = cart_buff[i]
-			
 		end
 		
 		print('Loaded ' .. CartBinary:size() .. ' bytes to EXP1 from file: ' .. filename)
+		CartBinary:close()
 	end
 end
 
@@ -75,7 +74,7 @@ end
 -- EXP1
 function read8(address)
 	if cart_attached then
-		return pal_read8(address)
+		return PAL.read8(address)
 	else
 		return 0xff
 	end
@@ -99,7 +98,7 @@ end
 
 function write8(address, value)
 	if cart_attached then
-		return pal_write8(addr, value)
+		return PAL.write8(addr, value)
 	else
 		return 0xff
 	end
