@@ -23,8 +23,7 @@ Support.extra.dofile('pio-cart.lua')
 Support.extra.dofile('pal.lua')
 Support.extra.dofile('flash.lua')
 
-PIOCart.cart_path = 'd:/psx/cart/unirom_standalone.rom'
---PIOCart.cart_path = 'd:/psx/cart/caetla34.bin'
+PIOCart.cart_path = 'unirom_standalone.rom'
 
 -- Global callbacks
 function DrawImguiFrame()
@@ -83,6 +82,33 @@ function UnknownMemoryWrite(address, size, value)
 		end
 
 		return true
+	end
+end
+
+function PIOCart.LoadCart(filename)
+	local exp1 = PCSX.getParPtr()
+	local exp1_size = 0x00040000
+	
+	if(string.len(filename) == 0) then
+		print('cart filename cannot be blank')
+	else
+		local CartBinary = Support.extra.open(filename)
+		if(CartBinary:failed()) then
+			print('Failed to open file: ' .. filename)
+			return
+		end
+
+		print('Opened file: ' .. filename .. ' file size: ' .. CartBinary:size())
+
+		cart_buff = ffi.new('uint8_t[?]', CartBinary:size())
+		cart_size = CartBinary:size()
+		if(cart_size > exp1_size) then cart_size = exp1_size end
+		CartBinary:read(cart_buff, CartBinary:size())
+		ffi.copy(exp1, cart_buff, cart_size)
+			
+		print('Loaded ' .. cart_size .. ' bytes to EXP1 from file: ' .. filename)
+		CartBinary:close()
+		event_lutsset = PCSX.Events.createEventListener('Memory::SetLuts', PIOCart.setLuts)
 	end
 end
 
