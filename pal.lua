@@ -91,12 +91,12 @@ function PIOCart.PAL.write8(address, value)
 		PIOCart.PAL.FlashMemory:write8(bit.band(address, 0x3ffff), value)
 	elseif (between(address, 0x1f040000, 0x1f060000 - 1)) then
 		if (PIOCart.PAL.m_bank == 0) then
-			print('PIOCart.PAL.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
+			--print('PIOCart.PAL.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
 			PIOCart.PAL.FlashMemory:write8(bit.band(address, 0x3ffff), value)
 		end
 	elseif(address == 0x1f060001) then -- Bank Select
 		PIOCart.PAL:setLUTFlashBank(value)
-		print('Bank selected: ' .. string.format("%x", value))
+		--print('Bank selected: ' .. string.format("%x", value))
 	else
 		print('Unknown 8-bit write in PIOCart.PAL.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
 	end

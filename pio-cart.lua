@@ -98,7 +98,7 @@ function PIOCart.read32(address)
 end
 
 function PIOCart.write8(address, value)
-	print('PIOCart.write8 ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value))
+	--print('PIOCart.write8 ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value))
 	PIOCart.PAL.write8(address, value)
 end
 

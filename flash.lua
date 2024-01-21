@@ -59,22 +59,22 @@ function PIOCart.PAL.FlashMemory.write8(self, address, value)
     if (self.m_pageWriteEnabled) then
         if (self.m_targetWritePage == -1) then
             self.m_targetWritePage = address / 128
-            print('page write enabled, target page: ' .. string.format("%x", self.m_targetWritePage))
+            --print('page write enabled, target page: ' .. string.format("%x", self.m_targetWritePage))
         end
 
         if (math.floor(address / 128) == self.m_targetWritePage) then
             PCSX.getParPtr()[address] = value
-            print('write8: ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value) .. ', page: ' .. string.format("%x", self.m_targetWritePage))
+            --print('write8: ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value) .. ', page: ' .. string.format("%x", self.m_targetWritePage))
 
             if (math.fmod(bit.band(address, 0xff), 0x80) == 0x7f) then
-                print('page write complete')
+                --print('page write complete')
                 self.m_pageWriteEnabled = false
                 self.m_targetWritePage = -1
             end
         end
     elseif (not self.m_dataProtectEnabled) then
         PCSX.getParPtr()[address] = value
-        print('write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
+        --print('write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
     else
         if ((address == 0x2aaa) or (address == 0x5555)) then
             self:writeCommandBus(address, value)
@@ -121,15 +121,15 @@ function PIOCart.PAL.FlashMemory.checkCommand(self)
     -- Check 3-cycle commands
     if(commandHistory[2] == 0xaa and commandHistory[1] == 0x55) then
         if(commandHistory[0] == 0xa0) then -- Software Data Protect Enable & Page - Write
-            print('Software Data Protect Enable & Page - Write')
+            --print('Software Data Protect Enable & Page - Write')
             self:softwareDataProtectEnablePageWrite()
             result = true
         elseif(commandHistory[0] == 0x90) then -- Software ID Entry
-            print('Software ID Entry')
+            --print('Software ID Entry')
             self:enterSoftwareIDMode()
             result = true
         elseif(commandHistory[0] == 0xf0) then -- Software ID Exit
-            print('Software ID Exit')
+            --print('Software ID Exit')
             self:exitSoftwareIDMode()
             result = true
         end
@@ -140,15 +140,15 @@ function PIOCart.PAL.FlashMemory.checkCommand(self)
         if(commandHistory[5] == 0xaa and commandHistory[4] == 0x55 and commandHistory[3] == 0x80
         and commandHistory[2] == 0xaa and commandHistory[1] == 0x55) then
             if(commandHistory[0] == 0x20) then -- Software Data Protect Disable
-                print('Software Data Protect Disable')
+                --print('Software Data Protect Disable')
                 self:softwareDataProtectDisable()
                 result = true
             elseif(commandHistory[0] == 0x10) then -- Software Chip-Erase
-                print('Software Chip-Erase')
+                --print('Software Chip-Erase')
                 self:softwareChipErase()
                 result = true
             elseif(commandHistory[0] == 0x60) then -- Alternate Software ID Entry
-                print('Alternate Software ID Entry')
+                --print('Alternate Software ID Entry')
                 self:enterSoftwareIDMode()
                 result = true
             end
