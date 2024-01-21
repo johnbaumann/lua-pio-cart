@@ -32,7 +32,7 @@ function PIOCart.LoadCart(filename)
 		print('cart filename cannot be blank')
 	else
 		local CartBinary = Support.extra.open(filename)
-		if(CartBinary:failed() == true) then
+		if(CartBinary:failed()) then
 			print('Failed to open file: ' .. filename)
 			return
 		end
@@ -70,8 +70,8 @@ function PIOCart.setLuts()
 		ffi.fill(writeLUT + 0x9f00, 6 * ffi.sizeof("void *"), 0)
 		ffi.fill(writeLUT + 0xbf00, 6 * ffi.sizeof("void *"), 0)
 
-		ffi.copy(readLUT + 0x9f00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"));
-		ffi.copy(readLUT+ 0xbf00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"));
+		ffi.copy(readLUT + 0x9f00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"))
+		ffi.copy(readLUT+ 0xbf00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"))
 		
 		PIOCart.PAL.reset()
 	end
@@ -98,13 +98,14 @@ function PIOCart.read32(address)
 end
 
 function PIOCart.write8(address, value)
+	print('PIOCart.write8 ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value))
 	PIOCart.PAL.write8(address, value)
 end
 
 function PIOCart.write16(address, value)
-
+	print('PIOCart.write16 not implemented')
 end
 
 function PIOCart.write32(address, value)
-
+	print('PIOCart.write32 not implemented')
 end
