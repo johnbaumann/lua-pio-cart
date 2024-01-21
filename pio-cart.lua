@@ -19,6 +19,8 @@
  ***************************************************************************/
  ]]
 
+ local ffi = require("ffi")
+
  PIOCart = {
     m_Connected = true,
     m_switchOn = true,

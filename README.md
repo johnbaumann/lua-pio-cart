@@ -14,6 +14,14 @@ Bank switching is not fully implemented. For this reason, most AR/GS/Xplorer rom
 
 This project is intended to be self-contained within a zip archive. The primary methods to load this file are:
 
+### Drag and drop
+
+Drag the zip archive onto PCSX-Redux's main window, you will see a message in the log window stating that the zip was added to the list of loaded archives.
+
+### File menu
+
+From the main menu, click File, Add Lua archive, and navigate to the zip archive.
+
 ### From the Lua Editor or Lua Console window
 
 Use the following command format Support.extra.dofile('DirectPathToZip'), i.e.

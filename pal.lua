@@ -19,6 +19,8 @@
  ***************************************************************************/
  ]]
 
+local ffi = require("ffi")
+
 PIOCart.PAL = {
 	m_bank = 0,
 	m_detachedMemory = ffi.new("uint8_t[64 * 1024]")

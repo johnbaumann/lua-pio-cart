@@ -25,6 +25,8 @@ Support.extra.dofile('flash.lua')
 
 PIOCart.cart_path = 'unirom_standalone.rom'
 
+local ffi = require 'ffi'
+
 -- Global callbacks
 function DrawImguiFrame()
 	local show = imgui.Begin('Lua PIO Cart', true)
@@ -112,7 +114,7 @@ function PIOCart.LoadCart(filename)
 	end
 end
 
-function resetCallback(reset_type)
+function PIOCart.resetCallback(reset_type)
 	if(reset_type.hard) then
 		PIOCart.LoadCart(PIOCart.cart_path)
 		PIOCart.setLuts()
@@ -125,4 +127,4 @@ PIOCart.PAL:init()
 PIOCart.PAL.FlashMemory:init()
 PIOCart.LoadCart(PIOCart.cart_path)
 
-event_reset = PCSX.Events.createEventListener('ExecutionFlow::Reset', resetCallback)
+PIOCart.event_reset = PCSX.Events.createEventListener('ExecutionFlow::Reset',  PIOCart.resetCallback)
