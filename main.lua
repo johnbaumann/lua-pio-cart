@@ -23,7 +23,7 @@ Support.extra.dofile('pio-cart.lua')
 Support.extra.dofile('pal.lua')
 Support.extra.dofile('flash.lua')
 
-PIOCart.cart_path = 'E:/ps1/cart/unirom_standalone.rom'
+PIOCart.cart_path = 'd:/psx/cart/unirom_standalone.rom'
 
 -- Global callbacks
 function DrawImguiFrame()
@@ -67,23 +67,38 @@ function UnknownMemoryRead(address, size)
 	return 0xff
 end
 
-function UnknownMemoryWrite(address, size)
+function UnknownMemoryWrite(address, size, value)
 	local page = bit.band(bit.rshift(address,16),0x1fff)
 
-	print('Unknown write in EXP1/PIO: ' .. string.format("%x", address))
+	--print("page = " .. string.format("%x", page))
 
 	if(page >= 0x1f00 and page < 0x1f80 and PIOCart.m_Connected == true) then
 		local addr = bit.band(address, 0x1fffffff)
 
 		if size == 1 then
-			PIOCart.write8(addr, value)
+			PIOCart.write8(addr, bit.band(value, 0xff))
 		elseif size == 2 then
-			PIOCart.write16(addr, value)
+			PIOCart.write16(addr, bit.band(value, 0xffff))
 		elseif size == 4 then
-			PIOCart.write32(addr, value)
+			PIOCart.write32(addr, bit.band(value, 0xffffffff))
 		end
+
+		return true
+	end
+end
+
+function resetCallback(reset_type)
+	print('PIO Cart reset')
+	PIOCart.LoadCart(PIOCart.cart_path)
+	PIOCart.setLuts()
+	if(reset_type.hard == true) then
+
+	else
+		
 	end
 end
 
 PIOCart.PAL.FlashMemory.init()
 PIOCart.LoadCart(PIOCart.cart_path)
+
+event_reset = PCSX.Events.createEventListener('ExecutionFlow::Reset', resetCallback)

@@ -41,12 +41,11 @@ function PIOCart.PAL.read8(address)
 		end
 	end
 	
-	print('Unknown read in EXP1/PIO: ' .. string.format("%x", address))
+	--print('Unknown read in EXP1/PIO: ' .. string.format("%x", address))
 	return 0xff
 end
 
 function PIOCart.PAL.reset()
-	print('PIOCart.PAL.reset')
 	PIOCart.PAL.FlashMemory.reset()
 	PIOCart.PAL.m_bank = 0
 end
@@ -76,10 +75,10 @@ end
 
 function PIOCart.PAL.write8(address, value)
 	if address >= 0x1f000000 and address <= 0x1f03ffff then
-		FlashMemory.write8(bit.band(address, 0x3ffff), value)
+		PIOCart.PAL.FlashMemory.write8(bit.band(address, 0x3ffff), value)
 	elseif address >= 0x1f040000 and address <= 0x1f060000 - 1 then
 		if (PIOCart.PAL.m_bank == 0) then
-			FlashMemory.write8(bit.band(address, 0x3ffff), value)
+			PIOCart.PAL.FlashMemory.write8(bit.band(address, 0x3ffff), value)
 		end
 	end
 end

@@ -26,26 +26,26 @@
 
 function PIOCart.LoadCart(filename)
 	local exp1 = PCSX.getParPtr()
+	local exp1_size = 0x00040000
 	
 	if(string.len(filename) == 0) then
 		print('cart filename cannot be blank')
 	else
 		local CartBinary = Support.extra.open(filename)
-		if(CartBinary == nil) then
+		if(CartBinary:failed() == true) then
 			print('Failed to open file: ' .. filename)
 			return
 		end
 
 		print('Opened file: ' .. filename .. ' file size: ' .. CartBinary:size())
 
-		cart_buff = Support.NewLuaBuffer(CartBinary:size())
-		cart_buff = CartBinary:read(CartBinary:size())
-
-		for i=0,CartBinary:size()-1,1 do
-			exp1[i] = cart_buff[i]
-		end
-		
-		print('Loaded ' .. CartBinary:size() .. ' bytes to EXP1 from file: ' .. filename)
+		cart_buff = ffi.new('uint8_t[?]', CartBinary:size())
+		cart_size = CartBinary:size()
+		if(cart_size > exp1_size) then cart_size = exp1_size end
+		CartBinary:read(cart_buff, CartBinary:size())
+		ffi.copy(exp1, cart_buff, cart_size)
+			
+		print('Loaded ' .. cart_size .. ' bytes to EXP1 from file: ' .. filename)
 		CartBinary:close()
 		event_lutsset = PCSX.Events.createEventListener('Memory::SetLuts', PIOCart.setLuts)
 	end
@@ -65,15 +65,20 @@ function PIOCart.setLuts()
 		
 		readLUT[0x1f04] = ffi.cast('uint8_t*', exp1)
 		readLUT[0x1f05] = ffi.cast('uint8_t*', exp1 + bit.lshift(1,16))
+
+		ffi.fill(writeLUT + 0x1f00, 6 * ffi.sizeof("void *"), 0)
+		ffi.fill(writeLUT + 0x9f00, 6 * ffi.sizeof("void *"), 0)
+		ffi.fill(writeLUT + 0xbf00, 6 * ffi.sizeof("void *"), 0)
+
+		ffi.copy(readLUT + 0x9f00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"));
+		ffi.copy(readLUT+ 0xbf00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"));
+		
+		PIOCart.PAL.reset()
 	end
 end
 
-function PIOCart.read8(address)
-	if PIOCart.m_Connected then
-		return PIOCart.PAL.read8(address)
-	else
-		return 0xff
-	end
+function PIOCart.read8(address) 
+	return PIOCart.PAL.read8(address)
 end
 
 function PIOCart.read16(address)
@@ -93,11 +98,7 @@ function PIOCart.read32(address)
 end
 
 function PIOCart.write8(address, value)
-	if PIOCart.m_Connected then
-		return PAL.write8(addr, value)
-	else
-		return 0xff
-	end
+	PIOCart.PAL.write8(address, value)
 end
 
 function PIOCart.write16(address, value)
