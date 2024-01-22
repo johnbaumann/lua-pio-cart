@@ -31,7 +31,7 @@ function between(val, low, high)
 	return (val >= low and val <= high)
 end
 
-function PIOCart.PAL.init(self)
+function PIOCart.PAL:init()
 	self.FlashMemory:init()
 	self.m_detachedMemory = ffi.fill(self.m_detachedMemory, 64 * 1024, 0xff)
 end
@@ -63,7 +63,7 @@ function PIOCart.PAL.reset()
 	PIOCart.PAL.m_bank = 0
 end
 
-function PIOCart.PAL.setLUTFlashBank(self, bank)
+function PIOCart.PAL:setLUTFlashBank(bank)
 	local readLUT = PCSX.getReadLUT()
 	local writeLUT = PCSX.getWriteLUT()
 	local exp1 = PCSX.getParPtr()
