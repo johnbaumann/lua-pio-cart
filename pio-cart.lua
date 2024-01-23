@@ -23,7 +23,7 @@
 
  PIOCart = {
     m_Connected = true,
-    m_switchOn = true,
+    m_switchOn = true
 }
 
 function PIOCart.setLuts()
@@ -38,8 +38,7 @@ function PIOCart.setLuts()
 			readLUT[i + 0x1f00] = ffi.cast('uint8_t*', exp1 + bit.lshift(i,16))
 		end
 		
-		readLUT[0x1f04] = ffi.cast('uint8_t*', exp1)
-		readLUT[0x1f05] = ffi.cast('uint8_t*', exp1 + bit.lshift(1,16))
+		PIOCart.PAL:setLUTFlashBank(PIOCart.PAL.m_bank)
 
 		ffi.fill(writeLUT + 0x1f00, 6 * ffi.sizeof("void *"), 0)
 		ffi.fill(writeLUT + 0x9f00, 6 * ffi.sizeof("void *"), 0)
@@ -47,13 +46,11 @@ function PIOCart.setLuts()
 
 		ffi.copy(readLUT + 0x9f00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"))
 		ffi.copy(readLUT+ 0xbf00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"))
-		
-		PIOCart.PAL.reset()
 	end
 end
 
 function PIOCart.read8(address) 
-	return PIOCart.PAL.read8(address)
+	return PIOCart.PAL:read8(address)
 end
 
 function PIOCart.read16(address)
@@ -74,7 +71,7 @@ end
 
 function PIOCart.write8(address, value)
 	--print('PIOCart.write8 ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value))
-	PIOCart.PAL.write8(address, value)
+	PIOCart.PAL:write8(address, value)
 end
 
 function PIOCart.write16(address, value)

@@ -96,7 +96,7 @@ function PIOCart.PAL.FlashMemory:softwareDataProtectDisable()
     self.m_dataProtectEnabled = false
 end
 
-function PIOCart.PAL.FlashMemory.softwareChipErase()
+function PIOCart.PAL.FlashMemory:softwareChipErase()
     ffi.fill(PCSX.getParPtr(), 256 * 1024, 0xff)
 end
 
@@ -199,7 +199,7 @@ function PIOCart.PAL.FlashMemory:resetFlash()
     m_pageWriteEnabled = false
 end
 
-function PIOCart.PAL.FlashMemory.setLUTNormal()
+function PIOCart.PAL.FlashMemory:setLUTNormal()
     local readLUT = PCSX.getReadLUT()
 	local exp1 = PCSX.getParPtr()
 
