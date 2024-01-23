@@ -66,17 +66,20 @@ end
 function PIOCart.PAL:setLUTFlashBank(bank)
 	local readLUT = PCSX.getReadLUT()
 	local writeLUT = PCSX.getWriteLUT()
-	local exp1 = PCSX.getParPtr()
 	
 	if(readLUT == nil or writeLUT == nill) then return end
 	
 	if(bank == 0) then
-		readLUT[0x1f04] = ffi.cast('uint8_t*', exp1 + bit.lshift(0,16))
-		readLUT[0x1f05] = ffi.cast('uint8_t*', exp1 + bit.lshift(1,16))
-	else
+		readLUT[0x1f04] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(0,16))
+		readLUT[0x1f05] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(1,16))
+	else--if(bank == 1) then
 		readLUT[0x1f04] = ffi.cast('uint8_t*', self.m_detachedMemory)
 		readLUT[0x1f05] = ffi.cast('uint8_t*', self.m_detachedMemory)
 	end
+	--[[elseif(bank == 2) then
+		readLUT[0x1f04] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(2,16))
+		readLUT[0x1f05] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(3,16))
+	end]]--
 	
 	ffi.copy(readLUT + 0x9f04, readLUT + 0x1f04, 2 * ffi.sizeof("void *"))
 	ffi.copy(readLUT + 0xbf04, readLUT + 0x1f04, 2 * ffi.sizeof("void *"))

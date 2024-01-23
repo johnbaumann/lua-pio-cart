@@ -25,7 +25,7 @@ Support.extra.dofile('flash.lua')
 
 PIOCart.cart_path = 'unirom_standalone.rom'
 
-local ffi = require 'ffi'
+local ffi = require("ffi")
 
 -- Global callbacks
 function DrawImguiFrame()
@@ -87,10 +87,8 @@ function UnknownMemoryWrite(address, size, value)
 	end
 end
 
-function PIOCart.LoadCart(filename)
-	local exp1 = PCSX.getParPtr()
-	local exp1_size = 0x00040000
-	
+function PIOCart.loadCart(filename)
+	local max_cart_size = 512 * 1024
 	if(string.len(filename) == 0) then
 		print('cart filename cannot be blank')
 	else
@@ -102,21 +100,20 @@ function PIOCart.LoadCart(filename)
 
 		print('Opened file: ' .. filename .. ' file size: ' .. CartBinary:size())
 
-		cart_buff = ffi.new('uint8_t[?]', CartBinary:size())
-		cart_size = CartBinary:size()
-		if(cart_size > exp1_size) then cart_size = exp1_size end
-		CartBinary:read(cart_buff, CartBinary:size())
-		ffi.copy(exp1, cart_buff, cart_size)
+		local cart_size = CartBinary:size()
+		if(cart_size > max_cart_size) then cart_size = max_cart_size end
+		ffi.fill(PIOCart.m_cartData, max_cart_size, 0xFF)
+		CartBinary:read(PIOCart.m_cartData, cart_size)
 			
-		print('Loaded ' .. cart_size .. ' bytes to EXP1 from file: ' .. filename)
+		print('Loaded ' .. cart_size .. ' of ' .. CartBinary:size() .. ' bytes from file: ' .. filename)
+		PIOCart.cart_path = filename
 		CartBinary:close()
-		event_lutsset = PCSX.Events.createEventListener('Memory::SetLuts', PIOCart.setLuts)
 	end
 end
 
 function PIOCart.resetCallback(reset_type)
 	if(reset_type.hard) then
-		PIOCart.LoadCart(PIOCart.cart_path)
+		PIOCart.loadCart(PIOCart.cart_path)
 		PIOCart.setLuts()
 	else
 		
@@ -125,6 +122,7 @@ end
 
 PIOCart.PAL:init()
 PIOCart.PAL.FlashMemory:init()
-PIOCart.LoadCart(PIOCart.cart_path)
+PIOCart.loadCart(PIOCart.cart_path)
 
-PIOCart.event_reset = PCSX.Events.createEventListener('ExecutionFlow::Reset',  PIOCart.resetCallback)
+PIOCart.event_lutsset = PCSX.Events.createEventListener('Memory::SetLuts', PIOCart.setLuts)
+PIOCart.event_reset = PCSX.Events.createEventListener('ExecutionFlow::Reset', PIOCart.resetCallback)

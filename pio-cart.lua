@@ -23,19 +23,19 @@
 
  PIOCart = {
     m_Connected = true,
-    m_switchOn = true
+    m_switchOn = true,
+	m_cartData = ffi.new("uint8_t[512 * 1024]")
 }
 
 function PIOCart.setLuts()
 	local readLUT = PCSX.getReadLUT()
 	local writeLUT = PCSX.getWriteLUT()
-	local exp1 = PCSX.getParPtr()
 	
-	if(readLUT == nil or writeLUT == nil or exp1 == nil) then return end
+	if(readLUT == nil or writeLUT == nil) then return end
 	
 	if(PIOCart.m_Connected) then
 		for i=0,3,1 do
-			readLUT[i + 0x1f00] = ffi.cast('uint8_t*', exp1 + bit.lshift(i,16))
+			readLUT[i + 0x1f00] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(i,16))
 		end
 		
 		PIOCart.PAL:setLUTFlashBank(PIOCart.PAL.m_bank)
@@ -54,19 +54,17 @@ function PIOCart.read8(address)
 end
 
 function PIOCart.read16(address)
-	byte2 = bit.lshift(PIOCart.read8(address + 1), 8)
-	byte1 = PIOCart.read8(address)
-	result = bit.bor(byte1, byte2)
-	return result
+	local byte2 = bit.lshift(PIOCart.read8(address + 1), 8)
+	local byte1 = PIOCart.read8(address)
+	return bit.bor(byte2, byte1)
 end
 
 function PIOCart.read32(address)
-	byte4 = bit.lshift(PIOCart.read8(address), 24)
-	byte3 = bit.lshift(PIOCart.read8(address + 1), 16)
-	byte2 = bit.lshift(PIOCart.read8(address + 2), 8)
-	byte1 = PIOCart.read8(address + 3)
-	result = bit.bor(byte1, byte2, byte3, byte4)
-	return result
+	local byte4 = bit.lshift(PIOCart.read8(address), 24)
+	local byte3 = bit.lshift(PIOCart.read8(address + 1), 16)
+	local byte2 = bit.lshift(PIOCart.read8(address + 2), 8)
+	local byte1 = PIOCart.read8(address + 3)
+	return bit.bor(byte4, byte3, byte2, byte1)
 end
 
 function PIOCart.write8(address, value)
