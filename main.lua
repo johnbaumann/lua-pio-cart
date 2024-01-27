@@ -47,6 +47,9 @@ function DrawImguiFrame()
 	end
 	
 	changed, PIOCart.m_Connected = imgui.Checkbox('Connected', PIOCart.m_Connected)
+	if(changed) then
+		PIOCart.setLUTs()
+	end
 
 	imgui.End()
 end
@@ -87,7 +90,7 @@ function UnknownMemoryWrite(address, size, value)
 	end
 end
 
-function PIOCart.loadCart(filename)
+function PIOCart.load(filename)
 	local max_cart_size = 512 * 1024
 	if(string.len(filename) == 0) then
 		print('cart filename cannot be blank')
@@ -111,18 +114,8 @@ function PIOCart.loadCart(filename)
 	end
 end
 
-function PIOCart.resetCallback(reset_type)
-	if(reset_type.hard) then
-		PIOCart.loadCart(PIOCart.cart_path)
-		PIOCart.setLuts()
-	else
-		
-	end
-end
-
 PIOCart.PAL:init()
 PIOCart.PAL.FlashMemory:init()
-PIOCart.loadCart(PIOCart.cart_path)
+PIOCart.load(PIOCart.cart_path)
 
-PIOCart.event_lutsset = PCSX.Events.createEventListener('Memory::SetLuts', PIOCart.setLuts)
-PIOCart.event_reset = PCSX.Events.createEventListener('ExecutionFlow::Reset', PIOCart.resetCallback)
+PIOCart.event_lutsset = PCSX.Events.createEventListener('Memory::SetLuts', PIOCart.setLUTs)

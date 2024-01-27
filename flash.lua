@@ -27,7 +27,8 @@ PIOCart.PAL.FlashMemory = {
     m_commandBufferAddress = ffi.new("uint16_t[6]"),
     m_commandLastAddress = 0,
     m_dataProtectEnabled = true,
-    m_pageWriteEnabled = false,
+    m_pageWriteEnabled = false, -- Todo: Need to reset this to false on some timer
+    m_softwareIDMode = false,
     m_targetWritePage = -1,
     m_softwareID = ffi.new("uint8_t[64 * 1024]"),
 }
@@ -58,12 +59,13 @@ end
 
 function PIOCart.PAL.FlashMemory:write8(address, value)
     --print('FlashMemory.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
+    local masked_addr = bit.band(address, 0x1ffff)
 
     if (self.m_pageWriteEnabled) then
         self:resetCommandBuffer()
         if (self.m_targetWritePage == -1) then
             self.m_targetWritePage = math.floor(address / 128)
-            --print('page write enabled, target page: ' .. self.m_targetWritePage)
+            --print('page write enabled, target page: ' .. self.m_targetWritePage .. ' ' .. string.format("%x", address))
         end
 
         if (math.floor(address / 128) == self.m_targetWritePage) then
@@ -75,14 +77,18 @@ function PIOCart.PAL.FlashMemory:write8(address, value)
                 self.m_pageWriteEnabled = false
                 self.m_targetWritePage = -1
             end
+        else
+            --print('page write complete')
+            self.m_pageWriteEnabled = false
+            self.m_targetWritePage = -1
         end
     elseif (not self.m_dataProtectEnabled) then
         self:resetCommandBuffer()
         PIOCart.m_cartData[address] = value
         --print('write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
     else
-        if ((address == 0x2aaa) or (address == 0x5555)) then
-            self:writeCommandBus(address, value)
+        if ((masked_addr == 0x2aaa) or (masked_addr == 0x5555)) then
+            self:writeCommandBus(masked_addr, value)
         end
     end
 end
@@ -103,12 +109,13 @@ end
 function PIOCart.PAL.FlashMemory:enterSoftwareIDMode()
     self:setLUTSoftwareID()
     self:resetCommandBuffer()
+    m_softwareIDMode = true
 end
 
 function PIOCart.PAL.FlashMemory:exitSoftwareIDMode()
     self:setLUTNormal()
     self:resetCommandBuffer()
-
+    m_softwareIDMode = false
 end
 
 function PIOCart.PAL.FlashMemory:checkCommand()
@@ -197,6 +204,17 @@ function PIOCart.PAL.FlashMemory:resetFlash()
     self:resetCommandBuffer()
     m_dataProtectEnabled = true
     m_pageWriteEnabled = false
+    m_softwareIDMode = false
+    m_bank = 0
+    m_chip = 0
+end
+
+function PIOCart.PAL.FlashMemory:setLUTs()
+    if(self.m_softwareIDMode) then
+        self:setLUTSoftwareID()
+    else
+        self:setLUTNormal()
+    end
 end
 
 function PIOCart.PAL.FlashMemory:setLUTNormal()
@@ -213,10 +231,10 @@ end
 function PIOCart.PAL.FlashMemory:setLUTSoftwareID()
     local readLUT = PCSX.getReadLUT()
 
-    for i=0,3,1 do
+    for i=0,5,1 do
         readLUT[0x1f00 + i] = ffi.cast('uint8_t*', self.m_softwareID)
     end
 
-    ffi.copy(readLUT + 0x9f00, readLUT + 0x1f00, 4 * ffi.sizeof("void *"))
-    ffi.copy(readLUT+ 0xbf00, readLUT + 0x1f00, 4 * ffi.sizeof("void *"))
+    ffi.copy(readLUT + 0x9f00, readLUT + 0x1f00, 5 * ffi.sizeof("void *"))
+    ffi.copy(readLUT+ 0xbf00, readLUT + 0x1f00, 5 * ffi.sizeof("void *"))
 end

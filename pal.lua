@@ -23,6 +23,7 @@ local ffi = require("ffi")
 
 PIOCart.PAL = {
 	m_bank = 0,
+	m_chip = 0,
 	m_detachedMemory = ffi.new("uint8_t[64 * 1024]")
 }
 
@@ -54,7 +55,7 @@ function PIOCart.PAL:read8(address)
 		end
 	end
 	
-	print('Unknown read in EXP1/PIO: ' .. string.format("%x", address))
+	--print('Unknown read in EXP1/PIO: ' .. string.format("%x", address))
 	return 0xff
 end
 
@@ -63,44 +64,60 @@ function PIOCart.PAL:reset()
 	self.m_bank = 0
 end
 
-function PIOCart.PAL:setLUTFlashBank(bank)
+function PIOCart.PAL:setLUTs()
+	local readLUT = PCSX.getReadLUT()
+	local writeLUT = PCSX.getWriteLUT()
+
+	for i=0,3,1 do
+		readLUT[i + 0x1f00] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(i,16))
+	end
+
+	ffi.copy(readLUT + 0x9f00, readLUT + 0x1f00, 4 * ffi.sizeof("void *"))
+	ffi.copy(readLUT+ 0xbf00, readLUT + 0x1f00, 4 * ffi.sizeof("void *"))
+
+	PIOCart.PAL:setLUTFlashBank()
+end
+
+function PIOCart.PAL:setLUTFlashBank()
 	local readLUT = PCSX.getReadLUT()
 	local writeLUT = PCSX.getWriteLUT()
 	
 	if(readLUT == nil or writeLUT == nill) then return end
-	
-	if(bank == 0) then
-		readLUT[0x1f04] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(0,16))
-		readLUT[0x1f05] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(1,16))
-	else--if(bank == 1) then
+
+	if(self.m_chip == 0) then
+		self.FlashMemory:setLUTs()
+		
+		if(self.m_bank == 0) then
+			ffi.copy(readLUT + 0x1f04, readLUT + 0x1f00, 2 * ffi.sizeof("void *"))
+		else--if(bank == 1) then
+			ffi.copy(readLUT + 0x1f04, readLUT + 0x1f02, 2 * ffi.sizeof("void *"))
+		end
+	else
 		readLUT[0x1f04] = ffi.cast('uint8_t*', self.m_detachedMemory)
 		readLUT[0x1f05] = ffi.cast('uint8_t*', self.m_detachedMemory)
 	end
-	--[[elseif(bank == 2) then
-		readLUT[0x1f04] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(2,16))
-		readLUT[0x1f05] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(3,16))
-	end]]--
 	
 	ffi.copy(readLUT + 0x9f04, readLUT + 0x1f04, 2 * ffi.sizeof("void *"))
 	ffi.copy(readLUT + 0xbf04, readLUT + 0x1f04, 2 * ffi.sizeof("void *"))
-	
-	self.m_bank = bank
 end
 
 function PIOCart.PAL:write8(address, value)
 	--print('PIOCart.PAL.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
 
 	if (between(address, 0x1f000000, 0x1f03ffff)) then
-		self.FlashMemory:write8(bit.band(address, 0x3ffff), value)
-	elseif (between(address, 0x1f040000, 0x1f060000 - 1)) then
-		if (self.m_bank == 0) then
-			--print('PIOCart.PAL.write8: FLASH2 ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
+		if (self.m_chip == 0) then
 			self.FlashMemory:write8(bit.band(address, 0x3ffff), value)
 		end
+	elseif (between(address, 0x1f040000, 0x1f060000 - 1)) then
+		if (self.m_chip == 0) then
+			--print('Flash2 write to ' .. string.format("%x", bit.band(address, 0x1ffff) + (self.m_bank * (128 * 1024))))
+			self.FlashMemory:write8(bit.band(address, 0x1ffff) + (self.m_bank * (128 * 1024)) , value)
+		end
 	elseif(address == 0x1f060001) then -- Bank Select
-		local bank = bit.band(bit.rshift(value, 4), 0x3)
-		--print('Bank selected: ' .. string.format("%x", value) .. ' masked: ' .. string.format("%x", bank))
-		PIOCart.PAL:setLUTFlashBank(bank)
+		self.m_bank = bit.band(bit.rshift(value, 5), 0x1)
+		self.m_chip = bit.band(bit.rshift(value, 4), 0x1)
+		--print('Bank select( ' .. string.format("%x", value) .. '), bank: ' .. string.format("%x", self.m_bank) .. ' chip: ' .. string.format("%x", self.m_chip))
+		PIOCart.PAL:setLUTFlashBank()
 	else
 		--print('Unknown 8-bit write in PIOCart.PAL.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
 	end

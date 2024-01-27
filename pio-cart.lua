@@ -27,26 +27,21 @@
 	m_cartData = ffi.new("uint8_t[512 * 1024]")
 }
 
-function PIOCart.setLuts()
+function PIOCart.setLUTs()
 	local readLUT = PCSX.getReadLUT()
 	local writeLUT = PCSX.getWriteLUT()
 	
 	if(readLUT == nil or writeLUT == nil) then return end
 	
-	if(PIOCart.m_Connected) then
-		for i=0,3,1 do
-			readLUT[i + 0x1f00] = ffi.cast('uint8_t*', PIOCart.m_cartData + bit.lshift(i,16))
-		end
-		
-		PIOCart.PAL:setLUTFlashBank(PIOCart.PAL.m_bank)
-
-		ffi.fill(writeLUT + 0x1f00, 6 * ffi.sizeof("void *"), 0)
-		ffi.fill(writeLUT + 0x9f00, 6 * ffi.sizeof("void *"), 0)
-		ffi.fill(writeLUT + 0xbf00, 6 * ffi.sizeof("void *"), 0)
-
-		ffi.copy(readLUT + 0x9f00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"))
-		ffi.copy(readLUT+ 0xbf00, readLUT + 0x1f00, 6 * ffi.sizeof("void *"))
+	if(PIOCart.m_Connected) then	
+		PIOCart.PAL:setLUTs()
+	else
+		ffi.fill(readLUT + 0x1f00, 6 * ffi.sizeof("void *"), 0)
 	end
+
+	ffi.fill(writeLUT + 0x1f00, 6 * ffi.sizeof("void *"), 0)
+	ffi.fill(writeLUT + 0x9f00, 6 * ffi.sizeof("void *"), 0)
+	ffi.fill(writeLUT + 0xbf00, 6 * ffi.sizeof("void *"), 0)
 end
 
 function PIOCart.read8(address) 
