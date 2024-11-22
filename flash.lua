@@ -35,7 +35,7 @@ PIOCart.PAL.FlashMemory = {
     m_twcEndCycle = 0
 }
 
-function PIOCart.PAL.FlashMemory.tickTWCTimer()
+function PIOCart.PAL.FlashMemory.twcTimerCB()
     local current_cycles = PCSX.getCPUCycles()
     if(current_cycles >= PIOCart.PAL.FlashMemory.m_twcEndCycle) then
         --print('10ms timer expired, missed by ' .. (current_cycles - m_endTimer) / (PCSX.CONSTS.CPU.ClockSpeed / 1000) .. 'ms')
@@ -55,7 +55,7 @@ function PIOCart.PAL.FlashMemory:tickTWCTimer()
     self.m_twcEndCycle = PCSX.getCPUCycles() + (PCSX.CONSTS.CPU.CLOCKSPEED / 100) -- 10ms
     
     if(self.m_twcTimer == 0) then
-        self.m_twcTimer = PCSX.Events.createEventListener('GPU::Vsync', self.tickTWCTimer) 
+        self.m_twcTimer = PCSX.Events.createEventListener('GPU::Vsync', self.twcTimerCB) 
     end
 end
 
