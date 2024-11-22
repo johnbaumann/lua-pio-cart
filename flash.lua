@@ -31,7 +31,7 @@ PIOCart.PAL.FlashMemory = {
     m_softwareIDMode = false,
     m_targetWritePage = -1,
     m_softwareID = ffi.new("uint8_t[64 * 1024]"),
-    m_twcTimer = 0,
+    m_twcTimer = NIL,
     m_twcEndCycle = 0
 }
 
@@ -43,8 +43,7 @@ function PIOCart.PAL.FlashMemory.twcTimerCB()
         PIOCart.PAL.FlashMemory.m_targetWritePage = -1
         PCSX.nextTick(
             function()
-                PIOCart.PAL.FlashMemory.m_twcTimer:remove()
-                PIOCart.PAL.FlashMemory.m_twcTimer = 0
+                PIOCart.PAL.FlashMemory.m_twcTimer = PIOCart.PAL.FlashMemory.m_twcTimer:remove()
             end
         )
     end
@@ -54,7 +53,7 @@ function PIOCart.PAL.FlashMemory:tickTWCTimer()
     local current_cycles = PCSX.getCPUCycles()
     self.m_twcEndCycle = PCSX.getCPUCycles() + (PCSX.CONSTS.CPU.CLOCKSPEED / 100) -- 10ms
     
-    if(self.m_twcTimer == 0) then
+    if(self.m_twcTimer == NIL) then
         self.m_twcTimer = PCSX.Events.createEventListener('GPU::Vsync', self.twcTimerCB) 
     end
 end
