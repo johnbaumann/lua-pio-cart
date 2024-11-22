@@ -38,7 +38,7 @@ PIOCart.PAL.FlashMemory = {
 function PIOCart.PAL.FlashMemory.twcTimerCB()
     local current_cycles = PCSX.getCPUCycles()
     if(current_cycles >= PIOCart.PAL.FlashMemory.m_twcEndCycle) then
-        --print('10ms timer expired, missed by ' .. (current_cycles - m_endTimer) / (PCSX.CONSTS.CPU.ClockSpeed / 1000) .. 'ms')
+        --print('10ms timer expired, missed by ' .. string.format("%x",(current_cycles - PIOCart.PAL.FlashMemory.m_twcEndCycle) / (PCSX.CONSTS.CPU.CLOCKSPEED / 1000)) .. 'ms')
         PIOCart.PAL.FlashMemory.m_pageWriteEnabled = false
         PIOCart.PAL.FlashMemory.m_targetWritePage = -1
         PCSX.nextTick(
