@@ -27,11 +27,37 @@ PIOCart.PAL.FlashMemory = {
     m_commandBufferAddress = ffi.new("uint16_t[6]"),
     m_commandLastAddress = 0,
     m_dataProtectEnabled = true,
-    m_pageWriteEnabled = false, -- Todo: Need to reset this to false on some timer
+    m_pageWriteEnabled = false,
     m_softwareIDMode = false,
     m_targetWritePage = -1,
     m_softwareID = ffi.new("uint8_t[64 * 1024]"),
+    m_twcTimer = 0,
+    m_twcEndCycle = 0
 }
+
+function PIOCart.PAL.FlashMemory.tickTWCTimer()
+    local current_cycles = PCSX.getCPUCycles()
+    if(current_cycles >= PIOCart.PAL.FlashMemory.m_twcEndCycle) then
+        --print('10ms timer expired, missed by ' .. (current_cycles - m_endTimer) / (PCSX.CONSTS.CPU.ClockSpeed / 1000) .. 'ms')
+        PIOCart.PAL.FlashMemory.m_pageWriteEnabled = false
+        PIOCart.PAL.FlashMemory.m_targetWritePage = -1
+        PCSX.nextTick(
+            function()
+                PIOCart.PAL.FlashMemory.m_twcTimer:remove()
+                PIOCart.PAL.FlashMemory.m_twcTimer = 0
+            end
+        )
+    end
+end
+
+function PIOCart.PAL.FlashMemory:tickTWCTimer()
+    local current_cycles = PCSX.getCPUCycles()
+    self.m_twcEndCycle = PCSX.getCPUCycles() + (PCSX.CONSTS.CPU.CLOCKSPEED / 100) -- 10ms
+    
+    if(self.m_twcTimer == 0) then
+        self.m_twcTimer = PCSX.Events.createEventListener('GPU::Vsync', self.tickTWCTimer) 
+    end
+end
 
 function PIOCart.PAL.FlashMemory:init()
     for i=0,(64*1024)-1,2 do
@@ -96,6 +122,7 @@ end
 function PIOCart.PAL.FlashMemory:softwareDataProtectEnablePageWrite()
     self.m_dataProtectEnabled = true
     self.m_pageWriteEnabled = true
+    self:tickTWCTimer()
 end
 
 function PIOCart.PAL.FlashMemory:softwareDataProtectDisable()
@@ -109,13 +136,13 @@ end
 function PIOCart.PAL.FlashMemory:enterSoftwareIDMode()
     self:setLUTSoftwareID()
     self:resetCommandBuffer()
-    m_softwareIDMode = true
+    self.m_softwareIDMode = true
 end
 
 function PIOCart.PAL.FlashMemory:exitSoftwareIDMode()
     self:setLUTNormal()
     self:resetCommandBuffer()
-    m_softwareIDMode = false
+    self.m_softwareIDMode = false
 end
 
 function PIOCart.PAL.FlashMemory:checkCommand()
@@ -132,8 +159,6 @@ function PIOCart.PAL.FlashMemory:checkCommand()
         commandHistory[i] = self.m_commandBuffer[(self.m_busCycle + j) % 6]
         j = j - 1
     end
-
-
 
     -- Check 3-cycle commands
     local is3CycleCommand = (
@@ -202,11 +227,11 @@ end
 
 function PIOCart.PAL.FlashMemory:resetFlash()
     self:resetCommandBuffer()
-    m_dataProtectEnabled = true
-    m_pageWriteEnabled = false
-    m_softwareIDMode = false
-    m_bank = 0
-    m_chip = 0
+    self.m_dataProtectEnabled = true
+    self.m_pageWriteEnabled = false
+    self.m_softwareIDMode = false
+    self.m_bank = 0
+    self.m_chip = 0
 end
 
 function PIOCart.PAL.FlashMemory:setLUTs()

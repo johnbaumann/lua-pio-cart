@@ -89,9 +89,10 @@ function UnknownMemoryWrite(address, size, value)
 		return true
 	end
 end
+-- Global callbacks
 
 function PIOCart.load(filename)
-	local max_cart_size = 512 * 1024
+	local max_rom_size = 512 * 1024
 	if(string.len(filename) == 0) then
 		print('cart filename cannot be blank')
 	else
@@ -103,12 +104,12 @@ function PIOCart.load(filename)
 
 		print('Opened file: ' .. filename .. ' file size: ' .. CartBinary:size())
 
-		local cart_size = CartBinary:size()
-		if(cart_size > max_cart_size) then cart_size = max_cart_size end
-		ffi.fill(PIOCart.m_cartData, max_cart_size, 0xFF)
-		CartBinary:read(PIOCart.m_cartData, cart_size)
+		local rom_size = CartBinary:size()
+		if(rom_size > max_rom_size) then rom_size = max_rom_size end
+		ffi.fill(PIOCart.m_cartData, max_rom_size, 0xFF)
+		CartBinary:read(PIOCart.m_cartData, rom_size)
 			
-		print('Loaded ' .. cart_size .. ' of ' .. CartBinary:size() .. ' bytes from file: ' .. filename)
+		print('Loaded ' .. rom_size .. ' of ' .. CartBinary:size() .. ' bytes from file: ' .. filename)
 		PIOCart.cart_path = filename
 		CartBinary:close()
 	end
