@@ -38,7 +38,7 @@ PIOCart.PAL.FlashMemory = {
 function PIOCart.PAL.FlashMemory.twcTimerCB()
     local current_cycles = PCSX.getCPUCycles()
     if(current_cycles >= PIOCart.PAL.FlashMemory.m_twcEndCycle) then
-        --print('10ms timer expired, missed by ' .. string.format("%x",(current_cycles - PIOCart.PAL.FlashMemory.m_twcEndCycle) / (PCSX.CONSTS.CPU.CLOCKSPEED / 1000)) .. 'ms')
+        PIOCart.debugPrint('10ms timer expired, missed by ' .. string.format("%x",(current_cycles - PIOCart.PAL.FlashMemory.m_twcEndCycle) / (PCSX.CONSTS.CPU.CLOCKSPEED / 1000)) .. 'ms')
         PIOCart.PAL.FlashMemory.m_pageWriteEnabled = false
         PIOCart.PAL.FlashMemory.m_targetWritePage = -1
         PCSX.nextTick(
@@ -68,7 +68,7 @@ function PIOCart.PAL.FlashMemory:init()
 end
 
 function PIOCart.PAL.FlashMemory:writeCommandBus(address, value)
-    --print('write command bus: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
+    PIOCart.debugPrint('write command bus: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
 
     self.m_commandBufferAddress[self.m_busCycle] = address
     self.m_commandBuffer[self.m_busCycle] = value
@@ -83,34 +83,34 @@ function PIOCart.PAL.FlashMemory:writeCommandBus(address, value)
 end
 
 function PIOCart.PAL.FlashMemory:write8(address, value)
-    --print('FlashMemory.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
+    PIOCart.debugPrint('FlashMemory.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
     local masked_addr = bit.band(address, 0x1ffff)
 
     if (self.m_pageWriteEnabled) then
         self:resetCommandBuffer()
         if (self.m_targetWritePage == -1) then
             self.m_targetWritePage = math.floor(address / 128)
-            --print('page write enabled, target page: ' .. self.m_targetWritePage .. ' ' .. string.format("%x", address))
+            PIOCart.debugPrint('page write enabled, target page: ' .. self.m_targetWritePage .. ' ' .. string.format("%x", address))
         end
 
         if (math.floor(address / 128) == self.m_targetWritePage) then
             PIOCart.m_cartData[address] = value
-            --print('write8: ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value) .. ', page: ' .. string.format("%x", self.m_targetWritePage))
+            PIOCart.debugPrint('write8: ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value) .. ', page: ' .. string.format("%x", self.m_targetWritePage))
 
             if (math.fmod(bit.band(address, 0xff), 0x80) == 0x7f) then
-                --print('page write complete')
+                PIOCart.debugPrint('page write complete')
                 self.m_pageWriteEnabled = false
                 self.m_targetWritePage = -1
             end
         else
-            --print('page write complete')
+            PIOCart.debugPrint('page write complete')
             self.m_pageWriteEnabled = false
             self.m_targetWritePage = -1
         end
     elseif (not self.m_dataProtectEnabled) then
         self:resetCommandBuffer()
         PIOCart.m_cartData[address] = value
-        --print('write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
+        PIOCart.debugPrint('write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
     else
         if ((masked_addr == 0x2aaa) or (masked_addr == 0x5555)) then
             self:writeCommandBus(masked_addr, value)
@@ -169,15 +169,15 @@ function PIOCart.PAL.FlashMemory:checkCommand()
     if(is3CycleCommand) then
         if(addressHistory[0] == 0x5555) then
             if(commandHistory[0] == 0xa0) then -- Software Data Protect Enable & Page-Write
-                --print('Software Data Protect Enable & Page-Write')
+                PIOCart.debugPrint('Software Data Protect Enable & Page-Write')
                 self:softwareDataProtectEnablePageWrite()
                 result = true
             elseif(commandHistory[0] == 0x90) then -- Software ID Entry
-                --print('Software ID Entry')
+                PIOCart.debugPrint('Software ID Entry')
                 self:enterSoftwareIDMode()
                 result = true
             elseif(commandHistory[0] == 0xf0) then -- Software ID Exit
-                --print('Software ID Exit')
+                PIOCart.debugPrint('Software ID Exit')
                 self:exitSoftwareIDMode()
                 result = true
             end
@@ -200,15 +200,15 @@ function PIOCart.PAL.FlashMemory:checkCommand()
         if(is6CycleComand) then
             if(addressHistory[0] == 0x5555) then
                 if(commandHistory[0] == 0x20) then -- Software Data Protect Disable
-                    --print('Software Data Protect Disable')
+                    PIOCart.debugPrint('Software Data Protect Disable')
                     self:softwareDataProtectDisable()
                     result = true
                 elseif(commandHistory[0] == 0x10) then -- Software Chip-Erase
-                    --print('Software Chip-Erase')
+                    PIOCart.debugPrint('Software Chip-Erase')
                     self:softwareChipErase()
                     result = true
                 elseif(commandHistory[0] == 0x60) then -- Alternate Software ID Entry
-                    --print('Alternate Software ID Entry')
+                    PIOCart.debugPrint('Alternate Software ID Entry')
                     self:enterSoftwareIDMode()
                     result = true
                 end

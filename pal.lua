@@ -55,7 +55,7 @@ function PIOCart.PAL:read8(address)
 		end
 	end
 	
-	--print('Unknown read in EXP1/PIO: ' .. string.format("%x", address))
+	PIOCart.debugPrint('Unknown read in EXP1/PIO: ' .. string.format("%x", address))
 	return 0xff
 end
 
@@ -102,7 +102,7 @@ function PIOCart.PAL:setLUTFlashBank()
 end
 
 function PIOCart.PAL:write8(address, value)
-	--print('PIOCart.PAL.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
+	PIOCart.debugPrint('PIOCart.PAL.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
 
 	if (self:between(address, 0x1f000000, 0x1f03ffff)) then
 		if (self.m_chip == 0) then
@@ -110,15 +110,15 @@ function PIOCart.PAL:write8(address, value)
 		end
 	elseif (self:between(address, 0x1f040000, 0x1f060000 - 1)) then
 		if (self.m_chip == 0) then
-			--print('Flash2 write to ' .. string.format("%x", bit.band(address, 0x1ffff) + (self.m_bank * (128 * 1024))))
+			PIOCart.debugPrint('Flash2 write to ' .. string.format("%x", bit.band(address, 0x1ffff) + (self.m_bank * (128 * 1024))))
 			self.FlashMemory:write8(bit.band(address, 0x1ffff) + (self.m_bank * (128 * 1024)) , value)
 		end
 	elseif(address == 0x1f060001) then -- Bank Select
 		self.m_bank = bit.band(bit.rshift(value, 5), 0x1) -- Flash Bank Select
 		self.m_chip = bit.band(bit.rshift(value, 4), 0x1) -- SRAM/EEPROM Switching
-		--print('Bank select( ' .. string.format("%x", value) .. '), bank: ' .. string.format("%x", self.m_bank) .. ' chip: ' .. string.format("%x", self.m_chip))
+		PIOCart.debugPrint('Bank select( ' .. string.format("%x", value) .. '), bank: ' .. string.format("%x", self.m_bank) .. ' chip: ' .. string.format("%x", self.m_chip))
 		PIOCart.PAL:setLUTFlashBank()
 	else
-		--print('Unknown 8-bit write in PIOCart.PAL.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
+		PIOCart.debugPrint('Unknown 8-bit write in PIOCart.PAL.write8: ' .. string.format("%x", address) .. ' ' .. string.format("%x", value))
 	end
 end

@@ -24,8 +24,15 @@
  PIOCart = {
     m_Connected = true,
     m_switchOn = true,
-	m_cartData = ffi.new("uint8_t[512 * 1024]")
+	m_cartData = ffi.new("uint8_t[512 * 1024]"),
+	m_debugPrint = true
 }
+
+function PIOCart.debugPrint(...)
+	if(PIOCart.m_debugPrint) then
+		print(...)
+	end
+end
 
 function PIOCart.setLUTs()
 	local readLUT = PCSX.getReadLUT()
@@ -63,7 +70,7 @@ function PIOCart.read32(address)
 end
 
 function PIOCart.write8(address, value)
-	--print('PIOCart.write8 ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value))
+	PIOCart.debugPrint('PIOCart.write8 ' .. string.format("%x", address) .. ' = ' .. string.format("%x", value))
 	PIOCart.PAL:write8(address, value)
 end
 
